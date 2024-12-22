@@ -115,9 +115,19 @@ class Mediator:
             return_exceptions=True
         )
 
+    async def ws_handshake(self, reader_z: asyncio.StreamReader, writer_z: asyncio.StreamWriter) -> None:
+        """Wait for a ws handshake header and send the response back to the client."""
+        hsdata = await reader_z.readuntil(b'\r\n\r\n')
+        writer_z.write(
+            wsdatautil.HandshakeRequest.from_streamdata(hsdata).make_response().to_streamdata()
+        )
+        await writer_z.drain()
+
     async def start(self) -> None:
         reader_a, writer_a = await asyncio.open_connection(sock=self.sock_a)
         reader_b, writer_b = await asyncio.open_connection(sock=self.sock_b)
+        await self.ws_handshake(reader_a, writer_a)
+        await self.ws_handshake(reader_b, writer_b)
         self.med_x = Mediation(self, reader_a, writer_b)
         self.med_y = Mediation(self, reader_b, writer_a)
         self.med_x.pendant = self.med_y
