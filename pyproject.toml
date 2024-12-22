@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wsbridge"
+authors = [
+    {name = "Adrian F. Hoefflin", email = "srccircumflex@outlook.com"},
+]
+description = "# todo"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = [
+    "ws", "websocket", "proxy",
+]
+license = {text = "MIT License"}
+classifiers = [
+    "Topic :: Communications",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "wsdatautil>=1.1",
+]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "wsbridge.__version__"}
+
+[project.urls]
+Repository = "https://github.com/srccircumflex/wsbridge"
