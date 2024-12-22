@@ -25,7 +25,7 @@ class Connection(threading.Thread):
         self.server_addr = (server_host, server_port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.response_queue = queue.Queue()
-        self.ws_stream_reader = wsdatautil.ProgressiveStreamReader("auto")
+        self.ws_stream_reader = wsdatautil.ProgressiveStreamReader(False)
 
     async def read_one_frame(self) -> wsdatautil.Frame:
         """Read one ws frame."""
@@ -99,6 +99,7 @@ class Connection(threading.Thread):
             wsdatautil.Frame(
                 payload,
                 wsdatautil.OPCODES.BINARY,
+                mask=None  # against RFC6455 (performance)
             ).to_streamdata()
         )
 

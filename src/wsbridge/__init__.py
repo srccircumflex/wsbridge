@@ -1,4 +1,4 @@
 from . import simpleservice
 from .simpleservice import Service as SimpleService
 
-__version__ = "0.3"
+__version__ = "0.4"

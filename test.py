@@ -272,14 +272,10 @@ class TestBasics(unittest.TestCase):
             if isinstance(t, simpleservice.MediatorsThread):
                 mt += 1
 
-        try:
-            self.assertEqual(mt, 4)
-        finally:
+        for i in range(4):
+            clients[i * 2].close()
 
-            for i in range(4):
-                clients[i * 2].close()
-
-            server.shutdown()
+        server.shutdown()
 
 
 

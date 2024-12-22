@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import concurrent.futures
+import errno
 import socket as _socket
 import sys
 import threading
@@ -30,14 +31,6 @@ class Mediation:
         self.ws_stream_reader = wsdatautil.ProgressiveStreamReader("auto")
         self._alive = True
 
-    async def ws_handshake(self) -> None:
-        """Wait for a ws handshake header and send the response back to the client."""
-        hsdata = await self.reader.readuntil(b'\r\n\r\n')
-        self.writer.write(
-            wsdatautil.HandshakeRequest.from_streamdata(hsdata).make_response().to_streamdata()
-        )
-        await self.writer.drain()
-
     async def read_one_frame(self) -> wsdatautil.Frame:
         """Read one ws frame."""
         while True:
@@ -60,9 +53,9 @@ class Mediation:
 
     async def run(self) -> None:
         try:
-            await self.ws_handshake()
             while self._alive:
                 for frame in await self.read_frames_until_fin():
+                    frame = wsdatautil.Frame(frame.payload, frame.opcode, None, frame.fin)  # removes the masking
                     self.writer.write(frame.to_streamdata())
                     await self.writer.drain()
         finally:
@@ -163,8 +156,8 @@ class MediatorsThread(threading.Thread):
     def run(self) -> None:
         """run the async loop in this thread"""
         self.async_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.async_loop)
         self.async_loop.run_forever()
+        self.async_loop.run_until_complete(self.async_loop.shutdown_asyncgens())
 
     async def add_med(self, sock_a: _socket.socket, sock_b: _socket.socket) -> None:
         """Add a Mediator to this thread."""
@@ -288,7 +281,13 @@ class Service(threading.Thread):
 
     def run(self) -> None:
         """asyncio.run(self.serve())"""
-        return asyncio.run(self.serve(), debug=True)
+        try:
+            return asyncio.run(self.serve())
+        except asyncio.CancelledError:
+            pass
+        except OSError as e:
+            if e.errno != errno.EBADF:  # Bad file descriptor
+                raise
 
     def start(self, wait_iterations: int | bool = False, wait_time: float = .001):
         super().start()
