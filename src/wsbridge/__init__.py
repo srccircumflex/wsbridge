@@ -1,4 +1,4 @@
-from . import simpleservice
+from . import simpleservice, baseclient
 from .simpleservice import Service as SimpleService
 
-__version__ = "0.4"
+__version__ = "0.5"
